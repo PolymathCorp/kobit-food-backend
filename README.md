@@ -32,15 +32,7 @@ A robust Express.js backend API for the KOBIT food delivery application with Mon
    FRONTEND_URL=http://localhost:3000
    \`\`\`
 
-4. **Seed the database:**
-   \`\`\`bash
-   npm run seed
-   \`\`\`
 
-5. **Start the server:**
-   \`\`\`bash
-   npm run dev
-   \`\`\`
 
 The backend will run on `http://localhost:5000`
 
@@ -83,31 +75,6 @@ After seeding the database:
 - **Admin**: admin@kobit.com / admin123
 - **Customer**: customer@kobit.com / customer123
 
-## 🏗️ Project Structure
-
-\`\`\`
-backend/
-├── models/           # Mongoose models
-│   ├── User.js
-│   ├── Restaurant.js
-│   └── Order.js
-├── routes/           # API routes
-│   ├── auth.js
-│   ├── restaurants.js
-│   ├── orders.js
-│   ├── payments.js
-│   └── users.js
-├── middleware/       # Custom middleware
-│   └── auth.js
-├── scripts/          # Utility scripts
-│   └── seed.js
-├── .vscode/          # VS Code configuration
-│   └── launch.json
-├── server.js         # Main server file
-├── package.json
-├── .env
-└── README.md
-\`\`\`
 
 ## 🛡️ Security Features
 
@@ -215,130 +182,4 @@ All API responses follow a consistent format:
 This project is licensed under the MIT License.
 \`\`\`
 
-Now let's update the frontend to connect to the backend:
 
-```ts file="lib/api-client.ts"
-[v0-no-op-code-block-prefix]const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
-
-// Add proper error handling and token management
-class ApiClient {
-  private baseURL: string
-  private token: string | null = null
-
-  constructor() {
-    this.baseURL = API_BASE_URL
-    // Get token from localStorage if available
-    if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('accessToken')
-    }
-  }
-
-  setToken(token: string) {
-    this.token = token
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('accessToken', token)
-    }
-  }
-
-  clearToken() {
-    this.token = null
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken')
-    }
-  }
-
-  private async request(endpoint: string, options: RequestInit = {}) {
-    const url = `${this.baseURL}${endpoint}`
-    
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    }
-
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`
-    }
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.message || 'API request failed')
-    }
-
-    return data
-  }
-
-  // Auth methods
-  async register(userData: any) {
-    return this.request('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    })
-  }
-
-  async login(credentials: any) {
-    return this.request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    })
-  }
-
-  async logout() {
-    return this.request('/auth/logout', {
-      method: 'POST',
-    })
-  }
-
-  async getProfile() {
-    return this.request('/auth/profile')
-  }
-
-  // Restaurant methods
-  async getRestaurants(params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params).toString()}` : ''
-    return this.request(`/restaurants${queryString}`)
-  }
-
-  async getRestaurant(slug: string) {
-    return this.request(`/restaurants/${slug}`)
-  }
-
-  // Order methods
-  async createOrder(orderData: any) {
-    return this.request('/orders', {
-      method: 'POST',
-      body: JSON.stringify(orderData),
-    })
-  }
-
-  async getOrders(params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params).toString()}` : ''
-    return this.request(`/orders${queryString}`)
-  }
-
-  async getOrder(id: string) {
-    return this.request(`/orders/${id}`)
-  }
-
-  // Payment methods
-  async processBankTransfer(paymentData: any) {
-    return this.request('/payments/bank-transfer', {
-      method: 'POST',
-      body: JSON.stringify(paymentData),
-    })
-  }
-
-  async confirmPayment(paymentData: any) {
-    return this.request('/payments/confirm', {
-      method: 'POST',
-      body: JSON.stringify(paymentData),
-    })
-  }
-}
-
-export const apiClient = new ApiClient()
